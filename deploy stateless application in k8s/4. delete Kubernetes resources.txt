@@ -1,0 +1,51 @@
+In this Lab Step, you will get practice deleting Kubernetes resources from the command-line.
+
+
+
+1. Delete the game service:
+
+
+[student@ca-lab-vm ~]$ kubectl delete service game
+service "game" deleted
+
+2. Delete the game deployment:
+
+
+[student@ca-lab-vm ~]$ kubectl delete deployment game-deployment
+deployment "game-deployment" deleted
+
+
+3. Observe that the pods are automatically deleted with the deployment deletion:
+
+[student@ca-lab-vm ~]$ kubectl get pods
+No resources found.
+
+
+4. Gracefully terminate the worker node:
+
+[student@ca-lab-vm ~]$ kubectl drain k8s-node
+node "k8s-node" cordoned
+node "k8s-node" drained
+
+
+The drain subcommand marks the node as unscheduable so no new pods can be assigned to it (the same as calling the cordon subcommand) and waits for graceful termination of the pods running on the node.
+
+This is useful when taking a node out of service for maintenance.
+
+
+
+5. Observe the status of the node after being drained:
+
+
+[student@ca-lab-vm ~]$ kubectl get node
+NAME       STATUS                     AGE
+k8s-node   Ready,SchedulingDisabled   45m
+
+The SchedulingDisabled STATUS is the result of cordoning.
+
+
+
+6. Delete the worker node from the cluster:
+
+[student@ca-lab-vm ~]$ kubectl delete node k8s-node
+node "k8s-node" deleted

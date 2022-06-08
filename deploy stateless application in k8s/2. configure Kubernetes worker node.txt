@@ -1,0 +1,50 @@
+ssh student@k8s-node
+
+
+configure a Red Hat Enterprise Linux 7 VM as a Kubernetes worker node
+
+You will use a single worker node for your cluster. Setting up multiple worker nodes follows a similar process with additional steps for installing an addon to set up a pod network.
+
+
+Kubernetes worker nodes, or simply nodes, provide the runtime environment for Kubernetes. Nodes maintain running pods in the Kubernetes cluster. Kubernetes clusters can have one node to thousands of nodes. Each node is configured with several components:
+
+kubelet: Primary agent of the node.  Responsible for watching pods assigned to it, running the pod's containers, reporting pod status, etc.
+kube-proxy: Enables the Kubernetes service abstraction by maintaining network rules and connection forwarding
+Docker: Runs containers
+
+
+
+$ sudo yum install -y kubernetes
+
+# The control plane node in a Kubernetes cluster can also perform worker node tasks and therefore worker node components are also installed on control plane nodes. 
+
+
+# In the Kubernetes common config file, change the KUBE_MASTER API server address to use the control plane's DNS name
+
+$ sudo sed -i 's/\(KUBE_MASTER.*\)127.0.0.1\(.*\)/\1ca-lab-vm\2/g' /etc/kubernetes/config
+
+# Enter the following commands to configure the kubelet
+
+# Listen on all interfaces
+$ sudo sed -i 's/\(KUBELET_ADDRESS.*\)127.0.0.1\(.*\)/\10.0.0.0\2/g' /etc/kubernetes/kubelet
+# Use the DNS hostname for the node
+$ sudo sed -i 's/\(KUBELET_HOSTNAME.*\)127.0.0.1\(.*\)/\1k8s-node\2/g' /etc/kubernetes/kubelet
+# Use the control plane's DNS name for the API server address
+$ sudo sed -i 's/\(KUBELET_API_SERVER.*\)127.0.0.1\(.*\)/\1ca-lab-vm\2/g' /etc/kubernetes/kubelet
+
+
+Start, enable on reboot, and show the status of the required worker node services:
+
+$ for SERVICE in kube-proxy kubelet docker; do 
+    sudo systemctl restart $SERVICE
+    sudo systemctl enable $SERVICE
+    sudo systemctl status $SERVICE 
+done
+
+
+#Return to your ca-lab-vm SSH session, and re-run the following command:
+
+[student@ca-lab-vm ~]$ kubectl get nodes
+NAME       STATUS    AGE
+k8s-node   Ready     20m
+
